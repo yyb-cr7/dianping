@@ -42,6 +42,8 @@ import static com.hmdp.utils.SystemConstants.USER_NICK_NAME_PREFIX;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+    // extends ServiceImpl<UserMapper, User>：UserServiceImpl 自动获得了基础的 CRUD 操作方法。
+    // 通过继承它，你可以快速创建一个服务层类而不需要手动实现基本的 CRUD 方法。
     @Resource
     private StringRedisTemplate stringRedisTemplate;
 
@@ -78,7 +80,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             //3.不一致，报错
             return Result.fail("验证码错误");
         }
-        //一致，根据手机号查询用户
+        //一致，根据手机号查询用户 确定这个电话号码是不是只有一条记录，如果有多条或者没有，证明数据库出错或者没有对应用户，抛出异常
         User user = query().eq("phone", phone).one();
 
         //5.判断用户是否存在
@@ -86,10 +88,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             //不存在，则创建
             user =  createUserWithPhone(phone);
         }
-        //7.保存用户信息到session中
-        // 7.1.随机生成token，作为登录令牌
+        // 随机生成token，作为登录令牌
         String token = UUID.randomUUID().toString(true);
-        // 7.2.将User对象转为HashMap存储
+        // 将User对象转为HashMap存储
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         Map<String, Object> userMap = BeanUtil.beanToMap(userDTO, new HashMap<>(),
                 CopyOptions.create()
